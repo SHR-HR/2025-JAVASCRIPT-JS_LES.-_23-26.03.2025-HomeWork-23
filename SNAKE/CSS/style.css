@@ -1,0 +1,238 @@
+/* ================================================================================================================================
+Урок от 26 марта 2025 года.
+===================================================================================================================================
+Курс:  Разработка интерфейса на JavaScript.
+===================================================================================================================================
+Дисциплина: Основы  JavaScript. 
+===================================================================================================================================
+Домашнее задание №23: Создание игры на JavaScript
+===================================================================================================================================
+Закончите игру и добавьте дополнительный функционал.
+
+Добавить для вашей игры дополнительный функционал.
+Например, условия для границ, кнопку для новой игры, кнопки для смены цветов холста и змейки.
+================================================================================================================================ */
+
+
+
+
+
+
+
+
+
+
+/* === СБРОС СТИЛЕЙ И ОБЩИЕ НАСТРОЙКИ === */
+
+* {
+  margin: 0;               /* Убираем отступы у всех элементов */
+  padding: 0;              /* Убираем внутренние отступы */
+  box-sizing: border-box; /* Размеры элемента включают padding и border */
+}
+
+body {
+  display: flex;                         /* Используем флексбокс для центрирования */
+  flex-direction: column;               /* Элементы идут вертикально */
+  align-items: center;                  /* Горизонтальное центрирование */
+  justify-content: center;             /* Вертикальное центрирование */
+  min-height: 100vh;                    /* Минимальная высота на весь экран */
+  background: linear-gradient(to right, #0f2027, #203a43, #2c5364); /* Градиентный фон */
+  font-family: 'Segoe UI', sans-serif; /* Основной шрифт */
+  position: relative;                   /* Для абсолютного позиционирования вложенных блоков */
+  overflow: hidden;                     /* Скрытие всего, что выходит за пределы экрана */
+}
+
+/* === ОСНОВНОЕ ИГРОВОЕ ПОЛЕ === */
+
+canvas {
+  border: 4px solid #ddd;         /* Рамка канваса */
+  background-color: #1b1b1b;      /* Тёмный фон по умолчанию */
+  margin-top: 20px;               /* Отступ сверху */
+  background-size: cover;         /* Покрытие фона по размеру канваса */
+  background-position: center;    /* Центрирование фонового изображения */
+}
+
+/* === СТАРТОВЫЙ ЭКРАН И ЭКРАН ОКОНЧАНИЯ ИГРЫ === */
+
+#startScreen, #gameOver {
+  position: absolute;                   /* Абсолютное позиционирование по центру */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);    /* Точная центровка */
+  background: rgba(0, 0, 0, 0.85);      /* Полупрозрачный чёрный фон */
+  padding: 30px;                        /* Внутренние отступы */
+  border-radius: 12px;                  /* Скруглённые углы */
+  box-shadow: 0 0 25px #000;            /* Тень */
+  color: #fff;                          /* Белый текст */
+  text-align: center;                   /* Выравнивание текста по центру */
+  z-index: 100;                         /* Поверх большинства элементов */
+}
+
+#startScreen h1, #gameOver h2 {
+  font-size: 36px;          /* Крупный заголовок */
+  margin-bottom: 20px;      /* Отступ снизу */
+}
+
+/* === СТИЛИ КНОПОК === */
+
+button {
+  padding: 10px 20px;         /* Внутренние отступы */
+  font-size: 18px;            /* Размер текста */
+  background: #4caf50;        /* Цвет фона (зелёный) */
+  color: white;               /* Цвет текста */
+  border: none;               /* Без рамки */
+  border-radius: 8px;         /* Скруглённые углы */
+  cursor: pointer;            /* Курсор — палец */
+  transition: 0.3s;           /* Плавность при наведении */
+}
+
+button:hover {
+  background-color: #388e3c;  /* Тёмно-зелёный при наведении */
+}
+
+/* === СКРЫТИЕ БЛОКОВ === */
+
+.hidden {
+  display: none;  /* Убираем элемент с экрана */
+}
+
+/* === UI — БОКОВАЯ ПАНЕЛЬ УПРАВЛЕНИЯ === */
+
+#ui {
+  position: absolute;     /* Абсолютное позиционирование в верхнем левом углу */
+  top: 20px;
+  left: 20px;
+  color: white;
+  z-index: 10;            /* Поверх канваса, но ниже окон */
+}
+
+/* Элементы внутри панели: селекты, кнопки, лейблы и очки */
+#ui select,
+#ui label,
+#ui button,
+#ui #score,
+#ui #bestScore {
+  margin-bottom: 10px; /* Отступ снизу у каждого элемента */
+  display: block;      /* Каждый элемент на новой строке */
+}
+
+#score {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* === ТАЧ-КНОПКИ УПРАВЛЕНИЯ === */
+
+#touchControls {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%); /* Центрирование по горизонтали */
+  z-index: 5;                  /* Ниже окон, но поверх канваса */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#touchControls div {
+  display: flex;
+  gap: 10px;              /* Расстояние между кнопками */
+  margin-top: 5px;        /* Отступ между рядами */
+}
+
+#touchControls button {
+  padding: 15px;
+  font-size: 24px;        /* Крупный текст (иконка) */
+  background: #e0e0e0;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+#touchControls button:hover {
+  background: #ccc;       /* При наведении — темнее */
+}
+
+/* === ЭКРАН ОБУЧЕНИЯ (ТУТОРИАЛ) === */
+
+#tutorialScreen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9); /* Почти чёрный фон */
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 25px #000;
+  color: #fff;
+  text-align: left;
+  z-index: 100;
+  max-width: 400px;  /* Ограничение по ширине */
+}
+
+#tutorialScreen h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+#tutorialScreen ul {
+  list-style: none;     /* Убираем стандартные маркеры списка */
+  padding-left: 0;
+  margin-bottom: 20px;
+}
+
+#tutorialScreen li {
+  margin-bottom: 10px;
+}
+
+/* === ПАНЕЛЬ С РЕКОРДАМИ === */
+
+#highScoresPanel {
+  position: absolute;
+  top: 50px;
+  right: 30px;
+  width: 250px;
+  background: rgba(0,0,0,0.85);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 1000;  /* Поверх всего */
+}
+
+/* === ФЕЙЕРВЕРК: ЧАСТИЦЫ ПОБЕДЫ === */
+
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;               /* Круглая частица */
+  opacity: 0.8;
+  animation: explode 1s ease-out forwards; /* Анимация взрыва */
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(1) translate(0, 0); /* Стартовая точка */
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2) translate(50px, -50px); /* Увеличение и смещение */
+    opacity: 0;
+  }
+}
+
+
+@keyframes shake {
+  0% { transform: translate(0px, 0px); }
+  25% { transform: translate(4px, 0px); }
+  50% { transform: translate(-4px, 0px); }
+  75% { transform: translate(4px, 0px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+.shake {
+  animation: shake 0.3s;
+}
+
+
